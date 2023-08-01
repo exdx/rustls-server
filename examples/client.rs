@@ -1,6 +1,7 @@
 use std::{
+    env::args,
     io::{self, Error, ErrorKind},
-    net::{IpAddr, SocketAddr},
+    net::IpAddr,
     sync::Arc,
 };
 
@@ -9,15 +10,15 @@ use rcgen::CertificateParams;
 use rustls::{ClientConfig, ClientConnection, ServerName};
 use tracing::info;
 
-/// cargo run -- [PEER IP] [STAKING PORT]
-/// cargo run -- 127.0.0.1 9649
+/// cargo run --example client -- [PEER IP] [STAKING PORT]
+/// cargo run --example client -- 127.0.0.1 9649
 fn main() -> io::Result<()> {
     // get args
     let peer_ip = args().nth(1).expect("no peer IP given");
     let peer_ip: IpAddr = peer_ip.parse().unwrap();
 
     let port = args().nth(2).expect("no port given");
-    let port: u16 = port.parse().unwrap();
+    let _port: u16 = port.parse().unwrap();
 
     let client_key_path = random_manager::tmp_path(10, None)?;
     let client_cert_path = random_manager::tmp_path(10, None)?;
@@ -56,7 +57,14 @@ fn main() -> io::Result<()> {
         .map_err(|e| Error::new(ErrorKind::Other, format!("client connection '{}'", e)))?;
 
     info!("retrieving peer certificates...");
-    let peer_certs = client.peer_certificates();
+    match client.peer_certificates() {
+        Some(peer_certs) => {
+            println!("peer certs: {:?}", peer_certs);
+        }
+        None => {
+            println!("no peer certs");
+        }
+    }
 
-    Ok(client)
+    Ok(())
 }
