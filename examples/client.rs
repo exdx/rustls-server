@@ -13,6 +13,10 @@ use tracing::info;
 /// cargo run --example client -- [PEER IP] [STAKING PORT]
 /// cargo run --example client -- 127.0.0.1 9649
 fn main() -> io::Result<()> {
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Trace)
+        .try_init();
+
     // get args
     let peer_ip = args().nth(1).expect("no peer IP given");
     let peer_ip: IpAddr = peer_ip.parse().unwrap();
