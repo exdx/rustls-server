@@ -43,7 +43,7 @@ fn main() -> io::Result<()> {
     let mut conn = rustls::ClientConnection::new(Arc::new(config), server_name).unwrap();
     let mut sock = TcpStream::connect(sock_addr).unwrap();
     let mut tls = rustls::Stream::new(&mut conn, &mut sock);
-    let _ = tls.write_all(
+    match tls.write_all(
         concat!(
             "GET / HTTP/1.1\r\n",
             "Host: www.rust-lang.org\r\n",
@@ -52,7 +52,14 @@ fn main() -> io::Result<()> {
             "\r\n"
         )
         .as_bytes(),
-    );
+    ) {
+        Ok(_) => {
+            println!("\n\n WROTE REQUEST\n\n");
+        }
+        Err(e) => {
+            println!("failed to write request: {}", e);
+        }
+    }
 
     info!("retrieving peer certificates...");
     match conn.peer_certificates() {
