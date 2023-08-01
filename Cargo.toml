@@ -1,0 +1,21 @@
+[package]
+name = "rustls-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cert-manager = "0.0.10"
+env_logger = "0.10.0"
+hyper = "0.14.27"
+hyper-rustls = "0.24.1"
+log = "0.4.19"
+random-manager = "0.0.5"
+rcgen = "0.10.0"
+rustls = { version = "0.21.5", features = ["logging"] }
+rustls-native-certs = "0.6.3"
+tokio = { version = "1.29.1", features = ["full"] }
+tokio-rustls = "0.24.1"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
