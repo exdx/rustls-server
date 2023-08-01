@@ -79,8 +79,13 @@ async fn main() -> io::Result<()> {
         let (stream, _) = tcp_listener.accept().await?;
         let tls_acceptor = tls_acceptor.clone();
         tokio::spawn(async move {
-            let _tls_stream = tls_acceptor.accept(stream).await.unwrap();
-            println!("Client connected");
+            match tls_acceptor.accept(stream).await {
+                Ok(_tls_stream) => {
+                    println!("TLS connection accepted");
+                    // handle(tls_stream).await
+                }
+                Err(e) => eprintln!("Error accepting TLS connection: {:?}", e),
+            }
         }).await?;
     }
 }
