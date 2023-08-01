@@ -5,7 +5,10 @@ use std::{
     sync::Arc,
 };
 
-use rustls::{OwnedTrustAnchor, RootCertStore, ServerName};
+use rustls::{
+    client::DangerousClientConfig, server::AllowAnyAnonymousOrAuthenticatedClient,
+    OwnedTrustAnchor, RootCertStore, ServerName,
+};
 use tracing::info;
 
 /// cargo run --example client -- [PEER IP] [STAKING PORT]
@@ -23,18 +26,20 @@ fn main() -> io::Result<()> {
     let port = args().nth(2).expect("no port given");
     let sock_addr = format!("{}:{}", server, port);
 
-    let mut root_store = RootCertStore::empty();
-    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
-        OwnedTrustAnchor::from_subject_spki_name_constraints(
-            ta.subject,
-            ta.spki,
-            ta.name_constraints,
-        )
-    }));
+    // let mut root_store = RootCertStore::empty();
+    // root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+    //     OwnedTrustAnchor::from_subject_spki_name_constraints(
+    //         ta.subject,
+    //         ta.spki,
+    //         ta.name_constraints,
+    //     )
+    // }));
     let config = rustls::ClientConfig::builder()
         .with_safe_defaults()
-        .with_root_certificates(root_store)
+        .with_custom_certificate_verifier(Arc::new(danger::NoCertificateVerification {}))
         .with_no_client_auth();
+    // .dangerous()
+    // .set_certificate_verifier(Arc::new(danger::NoCertificateVerification{}));
 
     // this creates the connection (or session)
     // ref. go/crypto/tls/Conn#clientHandshake
@@ -72,4 +77,26 @@ fn main() -> io::Result<()> {
     }
 
     Ok(())
+}
+
+mod danger {
+    use std::time::SystemTime;
+
+    use rustls::{client::ServerCertVerified, Certificate, Error, ServerName};
+
+    pub struct NoCertificateVerification {}
+
+    impl rustls::client::ServerCertVerifier for NoCertificateVerification {
+        fn verify_server_cert(
+            &self,
+            end_entity: &Certificate,
+            intermediates: &[Certificate],
+            server_name: &ServerName,
+            scts: &mut dyn Iterator<Item = &[u8]>,
+            ocsp_response: &[u8],
+            now: SystemTime,
+        ) -> Result<ServerCertVerified, Error> {
+            Ok(rustls::client::ServerCertVerified::assertion())
+        }
+    }
 }

@@ -13,7 +13,7 @@ hyper-rustls = "0.24.1"
 log = "0.4.19"
 random-manager = "0.0.5"
 rcgen = "0.10.0"
-rustls = { version = "0.21.5", features = ["logging"] }
+rustls = { version = "0.21.5", features = ["logging", "dangerous_configuration"] }
 rustls-native-certs = "0.6.3"
 tokio = { version = "1.29.1", features = ["full"] }
 tokio-rustls = "0.24.1"
