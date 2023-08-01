@@ -23,12 +23,11 @@ use crate::io::Error;
 async fn main() -> io::Result<()> {
     let _ = env_logger::builder()
         .filter_level(log::LevelFilter::Trace)
-        // .is_test(true)
         .try_init();
 
     // Initialize the tracing subscriber
     let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::DEBUG)
+        .with_max_level(Level::INFO)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
 
@@ -74,10 +73,11 @@ async fn main() -> io::Result<()> {
 
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
     let tcp_listener = TcpListener::bind(addr).await?;
-    
+
     loop {
         let (stream, _) = tcp_listener.accept().await?;
         let tls_acceptor = tls_acceptor.clone();
+        log::info!("accepting TLS connection");
         tokio::spawn(async move {
             match tls_acceptor.accept(stream).await {
                 Ok(_tls_stream) => {
@@ -86,6 +86,7 @@ async fn main() -> io::Result<()> {
                 }
                 Err(e) => eprintln!("Error accepting TLS connection: {:?}", e),
             }
-        }).await?;
+        })
+        .await?;
     }
 }
